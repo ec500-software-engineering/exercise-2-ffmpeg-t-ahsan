@@ -1,17 +1,18 @@
-import pytest  # pytest >= 3.9 for tmp_path
-import subprocess
+import queue
+import threading
+import os
+import compute
+vids_path = './videos'
+out = './processed'
 
-@pytest.fixture
-def genpat(tmp_path) -> Path:
-	"""
-	generate test video
-	"""
-	vidfn = tmp_path / 'bars.avi'
+def main():
+	q = queue.Queue()
+	folder = os.listdir(vids_path)
+	for file in folder:
+		q.put(vids_path+"/"+file)
+	for i in range(2):
+		worker = threading.Thread(target=compute.process, args=(q,vids_path))
+		worker.start()
 
-	subprocess.check_call(['ffmpeg', '-v', 'warning',
-'-f', 'lavfi',
-'-i', 'smptebars',
-'-t', 5.,
-str(vidfn)])
-
-    return vidfn
+if __name__ == "__main__":
+	main()
